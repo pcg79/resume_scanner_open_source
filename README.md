@@ -112,9 +112,13 @@ To get a local copy up and running follow these simple example steps.
 
 * pip
   ```sh
-  pip install -r requirements.txt 
+  pip install -r requirements.txt
   ```
 
+* python3
+  ```sh
+  brew install python
+  ```
 ### Installation
 
 1. Clone the repo
@@ -123,11 +127,53 @@ To get a local copy up and running follow these simple example steps.
    ```
 2. Install packages
    ```sh
-   pip install -r requirements.txt 
+   pip install -r requirements.txt
    ```
-3. You may need to install additional nltk word libraries
+
+   ```sh
+   pip install exponent-server-sdk
+   ```
+
+3. You may need to install additional nltk word libraries (via https://www.nltk.org/data.html).  Start python shell then
+
+   ```python
+   import nltk
+   nltk.download()
+   ```
+
+   and choose "d" (download) and then type "stopwords"
 
 4. Create a config.py file (in the resume_scanner directory) specifying the parameters listed (see example_config.py)
+
+5. Add a SECRET_KEY to settings.py
+
+   ```python
+   SECRET_KEY = 1
+   ```
+
+6. Create the migrations for the Resume app
+
+   ```sh
+   python3 manage.py makemigrations resumes
+   ```
+
+7. Make sure you have postgres installed and create a database and user for this.  Note the database, user, and password you've created and add them to config.py.  For some reason python wouldn't pick up the databases from config.py so I had to configure it direclty in settings.py.
+
+
+8. Run the migrations
+
+   ```sh
+   python3 manage.py migrate
+   ```
+
+9. Run the server
+
+   ```sh
+   python3 manage.py runserver
+   ```
+
+10. Visit the site at http://127.0.0.1:8000
+
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
