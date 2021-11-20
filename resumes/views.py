@@ -62,12 +62,21 @@ score_options =  {
     '80': "Your resume was a great fit for this job! Be sure to follow resume best practices to be ATS compatible!"
 }
 
-def index(request): 
+def index(request):
+    print("session start")
+    print(request.session)
+    print("session end")
     if ('resume' in request.session) and ('term' in request.session) and ('id' in request.session):
         try:
             resumescan = ResumeScan.objects.get(id = request.session['id'])
             resume = request.session['resume']
-            skills_table = build_skills_table(resumescan.resume, resumescan.job, skills_case)
+
+            print("resume start")
+            print(resume)
+            print("resume end")
+
+
+            skills_table = build_skills_table(resume, resumescan.job, skills_case)
             output = resumescan.outputs
             score_up = 0
             for skill in skills_table:
@@ -121,13 +130,13 @@ def index(request):
             else:
                 output_exp = score_options['0']
             context = {
-                'out':output, 
+                'out':output,
                 'explanation':output_exp,
-                'skills':sorted(skills_table, key = lambda i: (i['job'], i['resume']),reverse=True), 
+                'skills':sorted(skills_table, key = lambda i: (i['job'], i['resume']),reverse=True),
                 'ats':{
                     'phone':{'data':phone[0],'found':phone[1]},
-                    'linkedin':{'data':linkedin[0],'found':linkedin[1]}, 
-                    'email':{'data':email[0],'found':email[1]}, 
+                    'linkedin':{'data':linkedin[0],'found':linkedin[1]},
+                    'email':{'data':email[0],'found':email[1]},
                     'degree_match':{'data':degree_message,'found':degree[1]},
                     'resume_length':{'data':resume_length[0],'found':resume_length[1]},
                     'years_exp':{'data':years_exp[0],'found':years_exp[1]},
@@ -135,12 +144,14 @@ def index(request):
                 'last_resume': resume,
                 }
         except Exception as e:
+            print(e)
+            print(traceback.format_exc())
             context = None
     else:
         context = None
     return render(request,'index.html',context)
 
-def scan(request): 
+def scan(request):
     if ((term_check(request) == False) or ((len(request.POST['resume']) < 1) and ('filename' not in request.FILES)) or (len(request.POST['jobpost']) < 1)):
         messages.error(request, 'Please fill out resume, job post, and terms of service')
         return redirect('/resumescanner/')
@@ -148,7 +159,7 @@ def scan(request):
         if (request.FILES['filename'].name.endswith('.docx') or request.FILES['filename'].name.endswith('.pdf')) == False:
             messages.error(request, 'Please input a docx or pdf file')
             return redirect('/resumescanner/')
-    
+
     if 'resume' in request.session:
         del request.session['resume']
     if 'id' in request.session:
@@ -168,7 +179,7 @@ def scan(request):
 
     output = {}
     try:
-        vectorizer = TfidfVectorizer(analyzer=ngram_lem, min_df = 0.1) 
+        vectorizer = TfidfVectorizer(analyzer=ngram_lem, min_df = 0.1)
         tf_idf_matrix = vectorizer.fit_transform([request.POST['jobpost']])
         indexs, scores = match_full_data(post_resume, vectorizer, tf_idf_matrix)
         output.update({'lem':scores[0]})
@@ -414,18 +425,18 @@ def term_check(request):
 
 def remove_demographic_data(resume):
     if len(re.findall(regex_phone, resume))>0:
-        phone = re.findall(regex_phone, resume)[0] 
+        phone = re.findall(regex_phone, resume)[0]
         resume = resume.replace(phone, '')
     if len(re.findall(regex_linkedin, resume))>0:
-        linkedin = re.findall(regex_linkedin, resume)[0] 
+        linkedin = re.findall(regex_linkedin, resume)[0]
         resume = resume.replace(linkedin, '')
     if len(re.findall(regex_email, resume))>0:
-        email = re.findall(regex_email, resume)[0] 
+        email = re.findall(regex_email, resume)[0]
         resume = resume.replace(email, '')
-    if len(re.findall(regex_name, resume))>0: 
+    if len(re.findall(regex_name, resume))>0:
         name = re.findall(regex_name, resume)[0][0]
-        resume = resume.replace(name, '') 
+        resume = resume.replace(name, '')
     if len(re.findall(regex_address, resume))>0:
         address = re.findall(regex_address, resume)[0][0]
-        resume = resume.replace(address, '') 
+        resume = resume.replace(address, '')
     return resume
